@@ -1,0 +1,10 @@
+{
+  "chase": {
+    "floors": 5,
+    "sections": ["A", "B", "C", "D", "E", "F"]
+  },
+  "tower": {
+    "floors": 13,
+    "sections": []
+  }
+}

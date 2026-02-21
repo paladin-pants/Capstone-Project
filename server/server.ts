@@ -1,9 +1,11 @@
 import express from "express";
+import cors from "cors";
 import "dotenv/config";
 import { MongoClient, Db } from "mongodb";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME ?? "yourDatabaseName";
@@ -46,29 +48,33 @@ app.get("/api/machines", async (_req, res) => {
  */
 app.post("/api/machines", async (req, res) => {
   try {
-    const { name, type } = req.body;
-    if (!name) return res.status(400).json({ error: "name is required" });
+    const { type, building, floor, section } = req.body;
+    if (!building) {return res.status(400).json({ error: "building is required" });}
+    if (typeof floor !== "number") {return res.status(400).json({ error: "floor must be a number" });}
 
     const db = await connectToDatabase();
-    const result = await db.collection("inventory").insertOne({
-      name,
-      type: type ?? "unknown",
+
+    const machineDoc = {
+      type: type,
+      location: {
+        building,
+        floor,
+        ...(section ? { section } : {})
+      },
       createdAt: new Date(),
-    });
+    };
+
+    const result = await db.collection("machines").insertOne(machineDoc);
 
     res.status(201).json({
       _id: result.insertedId,
-      name,
-      type: type ?? "unknown",
+      ...machineDoc,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create machine" });
   }
-});
-
-app.get("/", (_req, res) => {
-  res.send("Backend is running ✅");
 });
 
 app.listen(port, () => console.log(`API running on http://localhost:${port}`));

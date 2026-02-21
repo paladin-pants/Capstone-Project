@@ -21,7 +21,7 @@
       .pill { font-size: 12px; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; }
       pre { background: #f6f8fa; padding: 10px; border-radius: 10px; overflow: auto; }
     </style>
-    <script type="module" crossorigin src="/assets/index-C5TMzM8D.js"></script>
+    <script type="module" crossorigin src="/assets/index-ZFf4vwhz.js"></script>
   </head>
   <body>
     <header>
@@ -32,7 +32,7 @@
       <button id="refreshBtn" type="button">Refresh</button>
     </header>
 
-    <!-- Create Machine modal -->
+    <!-- Create Machine Modal Button -->
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMachineModal">
       Create Machine
     </button>
@@ -47,6 +47,7 @@
 
   </body>
 
+  <!-- Create Machine Modal -->
   <div class="modal fade" id="createMachineModal" tabindex="-1" aria-labelledby="createMachineModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -55,10 +56,30 @@
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label for="machineName" class="form-label">Machine Name</label>
-            <input type="text" class="form-control" id="machineName" 
-              placeholder="Enter machine name"
-            />
+            <form id="machineForm">
+              <label for="machineType" class="form-label">Machine Type</label>
+              <select class="form-select mb-3" aria-label=".form-select" id="machineType">
+                <option selected>Select Machine Type</option>
+                <option value="washer">Washer</option>
+                <option value="dryer">Dryer</option>
+              </select>
+              <label for="machineBuilding" class="form-label">Building</label>
+              <select class="form-select mb-3" aria-label=".form-select" id="machineBuilding">
+                <option selected>Select Machine Building</option>
+                <option value="chase">Chase Court</option>
+                <option value="tower">Crowell Tower</option>
+              </select>
+              <label for="machineFloor" class="form-label">Floor</label>
+              <select class="form-select mb-3" id="machineFloor" disabled>
+                <option value="" selected>Select Floor</option>
+              </select>
+              <div id="sectionContainer" class="mb-3 d-none">
+                <label for="machineSection" class="form-label">Section</label>
+                <select class="form-select mb-3" id="machineSection">
+                  <option value="" selected>Select Section</option>
+                </select>
+              </div>
+            </form>
           </div>
         </div>
         <div class="modal-footer">
@@ -68,5 +89,16 @@
       </div>
     </div>
   </div>
+  <!-- Success Toast -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="successToastBody">
+        Machine created successfully!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
 
 </html>
