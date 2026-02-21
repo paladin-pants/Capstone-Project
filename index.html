@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-  <script type="module" src="./dist/main.js"></script>
 
   <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Items</title>
@@ -37,15 +37,14 @@
     </button>
 
     <!-- Create Machine modal -->
-    <!-- <button type="button" class="btn btn-primary" id="showMachineBtn">
+    <button type="button" class="btn btn-primary" id="showMachineBtn">
       Show Machines
-    </button> -->
+    </button>
 
     <div id="error" class="error" role="alert" aria-live="polite"></div>
     <div id="items"></div>
 
-    <!-- If you compile TS -> JS as app.js, load it here -->
-    <script type="module" src="./dist/app.js"></script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 
   <div class="modal fade" id="createMachineModal" tabindex="-1" aria-labelledby="createMachineModalLabel" aria-hidden="true">

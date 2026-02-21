@@ -12,25 +12,10 @@ export function createMachine(): void {
     alert(`Machine name: ${input?.value ?? ""}`);
 }
 
-// export async function showAll(): Promise<void> {
-//   const client = new MongoClient(MONGODB_URI);
-
-//   try {
-//     await client.connect();
-
-//     const db = client.db(DB_NAME);
-//     const collection = db.collection<Document>(COLLECTION_NAME);
-
-//     const docs = await collection.find({}).toArray();
-
-//     console.log(
-//       `Found ${docs.length} document(s) in ${DB_NAME}.${COLLECTION_NAME}`
-//     );
-
-//     for (const doc of docs) {
-//       console.log(JSON.stringify(doc, null, 2));
-//     }
-//   } finally {
-//     await client.close();
-//   }
-// }
+export async function showAll(): Promise<void> {
+  const res = await fetch("/api/machines"); // or "http://localhost:3000/api/inventory"
+  if (!res.ok) throw new Error("Failed to load machines");
+  const docs = await res.json();
+  console.log(docs);
+    console.log(':(')
+}
