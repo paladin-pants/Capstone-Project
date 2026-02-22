@@ -1,5 +1,5 @@
-import{ showToast } from "./minorFunctions.js"
-
+import { showToast } from "./minorFunctions.js"
+import type { MachineItem } from "./types/machine.js";
 // Creates a washer or dryer machine and adds it to the database
 export async function createMachine(): Promise<void> {
   const typeSelect = document.getElementById("machineType") as HTMLSelectElement | null;
@@ -64,9 +64,10 @@ export async function createMachine(): Promise<void> {
 }
 
 // Shows all machines from database
-export async function showAll(): Promise<void> {
+export async function showAll(): Promise<MachineItem[]> {
   const res = await fetch("/api/machines"); 
   if (!res.ok) throw new Error("Failed to load machines");
-  const docs = await res.json();
-  console.log(docs);
+  const docs = (await res.json()) as MachineItem[];
+
+  return docs;
 }

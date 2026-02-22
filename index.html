@@ -7,6 +7,7 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module" src="/src/main.ts"></script>
     <title>Items</title>
     <style>
       body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
@@ -23,14 +24,6 @@
     </style>
   </head>
   <body>
-    <header>
-      <div>
-        <h1 style="margin: 0;">Items</h1>
-        <div id="status" class="muted">Idle</div>
-      </div>
-      <button id="refreshBtn" type="button">Refresh</button>
-    </header>
-
     <!-- Create Machine Modal Button -->
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMachineModal">
       Create Machine
@@ -41,10 +34,7 @@
       Show Machines
     </button>
 
-    <div id="error" class="error" role="alert" aria-live="polite"></div>
-    <div id="items"></div>
-
-    <script type="module" src="/src/main.ts"></script>
+    <div id="list"></div>
   </body>
 
   <!-- Create Machine Modal -->
