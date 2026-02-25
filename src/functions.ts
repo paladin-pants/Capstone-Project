@@ -1,5 +1,6 @@
 import { showToast } from "./minorFunctions.js"
 import type { MachineItem } from "./types/machine.js";
+
 // Creates a washer or dryer machine and adds it to the database
 export async function createMachine(): Promise<void> {
   const typeSelect = document.getElementById("machineType") as HTMLSelectElement | null;
@@ -41,7 +42,6 @@ export async function createMachine(): Promise<void> {
 
     const data = await response.json();
 
-    // Toast showing success
     showToast(`Created machine with ID: ${data._id}`, "success");
 
     // Resetting the form
@@ -63,6 +63,24 @@ export async function createMachine(): Promise<void> {
 
 }
 
+// Deletes a machine
+export async function deleteById(event: Event) {
+  const target = event.currentTarget as HTMLButtonElement;
+  const id = target.id;
+
+  if (!id) return;
+
+  const result = await fetch(`/api/machines/${id}`, {
+      method: "DELETE",
+  });
+  if (result.status === 200) {
+    showToast(`Deleted machine with ID: ${id}`, "success");
+    const row = document.getElementById(id);
+    row?.remove();
+  }
+  // location.reload();
+}
+
 // Shows all machines from database
 export async function showAll(): Promise<MachineItem[]> {
   const res = await fetch("/api/machines"); 
@@ -71,3 +89,47 @@ export async function showAll(): Promise<MachineItem[]> {
 
   return docs;
 }
+
+// Displays all machines
+export async function loadMachines() {
+  const list = document.getElementById("list")
+    if (list) {
+        const machineList = await showAll();
+        let html = ''
+        html += '<table style="width: 100%" class="table table-bordered table-hover" id="machines">'
+        html +=     '<thead>'
+        html +=         '<tr>'
+        html +=             '<th style="width: 40%">Type</th>'
+        html +=             '<th style="width: 40%">Building</th>'
+        html +=             '<th style="width: 10%">Floor</th>'
+        html +=             '<th style="width: 10%">Section</th>'
+        html +=         '</tr>'
+        html +=     '</thead>'
+        html +=     '<tbody>'
+        for(const machine of machineList) {
+            html += `<tr id=${machine._id}>`
+            html +=     `<td>${machine.type}</td>`
+            html +=     `<td>${machine.location.building}</td>`
+            html +=     `<td>${machine.location.floor}</td>`
+            html +=     `<td>${machine.location.section ?? ""}</td>`
+            html +=     `<td><button class="delete-btn" id=${machine._id}>Delete</button></td>`
+            html += '</tr>'
+        }
+        html +=     '</tbody>'
+        html += '</table>'
+        list.innerHTML = html
+
+        const buttons = document.querySelectorAll(".delete-btn");
+
+        // Delete buttons added
+        buttons.forEach((button) => {
+            button.addEventListener("click", async (event) => {
+                deleteById(event)
+            });
+        });
+    }
+}
+
+// export function refreshMachines() {
+//   const list = document.getElementById("list")
+// }

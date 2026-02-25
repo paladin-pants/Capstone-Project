@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import { MongoClient, Db } from "mongodb";
+import { MongoClient, Db, ObjectId  } from "mongodb";
 
 const app = express();
 app.use(express.json());
@@ -40,6 +40,37 @@ app.get("/api/machines", async (_req, res) => {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch machines" });
   }
+});
+
+/**
+ * DELETE /api/machines/:id
+ * Deletes a machine by its id
+ */
+app.delete("/api/machines/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+
+    const db = await connectToDatabase();
+
+    const result = await db
+      .collection("machines")
+      .deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Machine not found" });
+    }
+
+    res.json({ message: "Machine deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete machine" });
+  }
+  return('success')
 });
 
 /**

@@ -1,4 +1,4 @@
-import { createMachine, showAll } from "./functions.js";
+import { createMachine, showAll, loadMachines } from "./functions.js";
 import buildingData from "./data/buildings.json";
 
 const uri = "mongodb://localhost:27017/";
@@ -14,32 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sectionContainer = document.getElementById("sectionContainer") as HTMLDivElement | null;
     
     // Loads all machines and displays it
-    const list = document.getElementById("list")
-    if (list) {
-        const machineList = await showAll();
-        let html = ''
-        html += '<table style="width: 100%" class="table table-bordered table-hover" id="machines">'
-        html +=     '<thead>'
-        html +=         '<tr>'
-        html +=             '<th style="width: 40%">Type</th>'
-        html +=             '<th style="width: 40%">Building</th>'
-        html +=             '<th style="width: 10%">Floor</th>'
-        html +=             '<th style="width: 10%">Section</th>'
-        html +=         '</tr>'
-        html +=     '</thead>'
-        html +=     '<tbody>'
-        for(const machine of machineList) {
-            html += `<tr id=${machine._id}>`
-            html +=     `<td>${machine.type}</td>`
-            html +=     `<td>${machine.location.building}</td>`
-            html +=     `<td>${machine.location.floor}</td>`
-            html +=     `<td>${machine.location.section ?? ""}</td>`
-            html += '</tr>'
-        }
-        html +=     '</tbody>'
-        html += '</table>'
-        list.innerHTML = html
-    }
+    loadMachines()
 
     // Button Handlers
     createMachineButton?.addEventListener("click", () => {
