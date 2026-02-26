@@ -43,7 +43,8 @@ export async function createMachine(): Promise<void> {
     const data = await response.json();
 
     showToast(`Created machine with ID: ${data._id}`, "success");
-
+    refreshMachines();
+    
     // Resetting the form
     form?.reset();
 
@@ -130,6 +131,8 @@ export async function loadMachines() {
     }
 }
 
-// export function refreshMachines() {
-//   const list = document.getElementById("list")
-// }
+export function refreshMachines() {
+  const list = document.getElementById("machines")
+  list?.remove()
+  loadMachines()
+}
