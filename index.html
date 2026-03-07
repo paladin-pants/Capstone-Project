@@ -29,12 +29,21 @@
       Create Machine
     </button>
 
-    <!-- Create Machine modal -->
-    <button type="button" class="btn btn-primary" id="showMachineBtn">
-      TEST
-    </button>
+    <!-- Building Filter Buttons -->
+    <div class="mt-3 mb-2 d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary" id="filterChase">Chase Court</button>
+      <button type="button" class="btn btn-outline-secondary" id="filterTower">Crowell Tower</button>
+    </div>
+
+    <!-- Floor Filter Buttons (populated dynamically) -->
+    <div class="mb-2 d-flex gap-2 flex-wrap d-none" id="floorFilterRow"></div>
 
     <div id="list"></div>
+
+    <!-- Floor Map -->
+    <div id="floorMap" style="display:none; position:relative; display:none; margin-top:16px;">
+      <img id="floorMapImg" src="" style="width:100%; display:block;" />
+    </div>
   </body>
 
   <!-- Create Machine Modal -->

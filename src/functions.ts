@@ -91,11 +91,15 @@ export async function showAll(): Promise<MachineItem[]> {
   return docs;
 }
 
-// Displays all machines
-export async function loadMachines() {
+// Displays all machines, optionally filtered by building and/or floor
+export async function loadMachines(building?: string, floor?: number) {
   const list = document.getElementById("list")
     if (list) {
-        const machineList = await showAll();
+        const all = await showAll();
+        const machineList = all.filter(m =>
+            (!building || m.location.building === building) &&
+            (!floor || m.location.floor === floor)
+        );
         let html = ''
         html += '<table style="width: 100%" class="table table-bordered table-hover" id="machines">'
         html +=     '<thead>'
@@ -131,8 +135,8 @@ export async function loadMachines() {
     }
 }
 
-export function refreshMachines() {
+export function refreshMachines(building?: string, floor?: number) {
   const list = document.getElementById("machines")
   list?.remove()
-  loadMachines()
+  loadMachines(building, floor)
 }
