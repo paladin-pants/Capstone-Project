@@ -17,28 +17,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     const floorMap = document.getElementById("floorMap") as HTMLDivElement;
     const floorMapImg = document.getElementById("floorMapImg") as HTMLImageElement;
 
-    // Section button positions (left%, top%) on the Chase Floor 3 map
+    // Section button positions (left%, top%) on the Chase simple floor plan
     const chaseFloor3Sections: { label: string; left: string; top: string }[] = [
-        { label: "D", left: "28%", top: "20%" },
-        { label: "E", left: "62%", top: "30%" },
-        { label: "C", left: "20%", top: "63%" },
-        { label: "B", left: "40%", top: "70%" },
-        { label: "A", left: "63%", top: "63%" },
+        { label: "D", left: "46%", top: "26%" },
+        { label: "E", left: "61%", top: "39%" },
+        { label: "C", left: "35%", top: "67%" },
+        { label: "B", left: "50%", top: "74%" },
+        { label: "A", left: "66%", top: "63%" },
     ];
 
-    function showFloorMap(building: string, floor: number) {
+    async function showFloorMap(building: string, floor: number) {
         floorMap.innerHTML = "";
         if (building === "chase" && floor === 3) {
-            floorMapImg.src = "/maps/chase_about_floor3.jpg";
+            floorMapImg.src = "/maps/chasesimplefloorplan.png";
             floorMap.appendChild(floorMapImg);
-            for (const section of chaseFloor3Sections) {
-                const btn = document.createElement("button");
-                btn.type = "button";
-                btn.className = "btn btn-warning";
-                btn.textContent = `Section ${section.label}`;
-                btn.style.cssText = `position:absolute; left:${section.left}; top:${section.top}; transform:translate(-50%,-50%);`;
-                floorMap.appendChild(btn);
+
+            const all = await showAll();
+            const machines = all.filter(m => m.location.building === building && m.location.floor === floor);
+
+            // Group machines by section
+            const bySection = new Map<string, typeof machines>();
+            for (const machine of machines) {
+                const section = machine.location.section ?? "";
+                if (!bySection.has(section)) bySection.set(section, []);
+                bySection.get(section)!.push(machine);
             }
+
+            for (const [section, sectionMachines] of bySection) {
+                const pos = chaseFloor3Sections.find(s => s.label === section);
+                if (!pos) continue;
+
+                const table = document.createElement("table");
+                table.style.cssText = `position:absolute; left:${pos.left}; top:${pos.top}; transform:translate(-50%,-50%); border-collapse:collapse; font-size:clamp(7px, 0.8vw, 13px);`;
+
+                for (const machine of sectionMachines) {
+                    const label = machine.type === "washer" ? "Washer" : "Dryer";
+                    const tr = document.createElement("tr");
+                    const td = document.createElement("td");
+                    td.textContent = `${label} - ${machine.location.floor}${section}`;
+                    td.className = machine.type === "washer" ? "btn btn-primary" : "btn btn-warning";
+                    td.style.cssText = `cursor:pointer; width:5vw; height:2.5vw; text-align:center; vertical-align:middle; padding:2px; white-space:normal; word-break:break-word;`;
+                    td.addEventListener("click", () => alert(`Machine ID: ${machine._id}`));
+                    tr.appendChild(td);
+                    table.appendChild(tr);
+                }
+                floorMap.appendChild(table);
+            }
+
             floorMap.style.display = "block";
         } else {
             floorMap.style.display = "none";
@@ -97,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sectionContainer = document.getElementById("sectionContainer") as HTMLDivElement | null;
     
     // Loads all machines and displays it
-    loadMachines()
+    // loadMachines()
 
     // Button Handlers
     createMachineButton?.addEventListener("click", () => {
