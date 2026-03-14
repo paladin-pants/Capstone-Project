@@ -78,6 +78,12 @@ export async function deleteById(event: Event) {
     showToast(`Deleted machine with ID: ${id}`, "success");
     const row = document.getElementById(id);
     row?.remove();
+
+    // If no machine rows remain, signal that the floor is now empty
+    const remainingMachines = document.querySelectorAll("#machines tbody tr[id]");
+    if (remainingMachines.length === 0) {
+      document.dispatchEvent(new CustomEvent("floor-empty"));
+    }
   }
   // location.reload();
 }
@@ -100,25 +106,27 @@ export async function loadMachines(building?: string, floor?: number) {
             (!building || m.location.building === building) &&
             (!floor || m.location.floor === floor)
         );
+        // Group machines by section (empty string for machines with no section)
+        const bySection = new Map<string, typeof machineList>();
+        for (const machine of machineList) {
+            const section = machine.location.section ?? "";
+            if (!bySection.has(section)) bySection.set(section, []);
+            bySection.get(section)!.push(machine);
+        }
+
         let html = ''
         html += '<table style="width: 100%" class="table table-bordered table-hover" id="machines">'
-        html +=     '<thead>'
-        html +=         '<tr>'
-        html +=             '<th style="width: 40%">Type</th>'
-        html +=             '<th style="width: 40%">Building</th>'
-        html +=             '<th style="width: 10%">Floor</th>'
-        html +=             '<th style="width: 10%">Section</th>'
-        html +=         '</tr>'
-        html +=     '</thead>'
         html +=     '<tbody>'
-        for(const machine of machineList) {
-            html += `<tr id=${machine._id}>`
-            html +=     `<td>${machine.type}</td>`
-            html +=     `<td>${machine.location.building}</td>`
-            html +=     `<td>${machine.location.floor}</td>`
-            html +=     `<td>${machine.location.section ?? ""}</td>`
-            html +=     `<td><button class="delete-btn" id=${machine._id}>Delete</button></td>`
-            html += '</tr>'
+        for (const [section, machines] of bySection) {
+            if (section) {
+                html += `<tr><td colspan="2" class="table-secondary fw-bold">Section ${section}</td></tr>`
+            }
+            for (const machine of machines) {
+                html += `<tr id=${machine._id}>`
+                html +=     `<td>${machine.type}</td>`
+                html +=     `<td class="admin"><button class="delete-btn" id=${machine._id}>Delete</button></td>`
+                html += '</tr>'
+            }
         }
         html +=     '</tbody>'
         html += '</table>'

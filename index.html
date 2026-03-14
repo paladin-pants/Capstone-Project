@@ -10,7 +10,7 @@
     <script type="module" src="/src/main.ts"></script>
     <title>Items</title>
     <style>
-      body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+      body { font-family: system-ui, Arial, sans-serif; margin: 0; }
       header { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
       button { padding: 8px 12px; cursor: pointer; }
       .muted { color: #666; }
@@ -21,28 +21,56 @@
       .row { display: flex; gap: 10px; flex-wrap: wrap; }
       .pill { font-size: 12px; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; }
       pre { background: #f6f8fa; padding: 10px; border-radius: 10px; overflow: auto; }
+      body.user .admin { display: none !important; }
     </style>
   </head>
-  <body>
-    <!-- Create Machine Modal Button -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMachineModal">
-      Create Machine
-    </button>
+  <body class="user">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark px-3">
+      <span class="navbar-brand mb-0 h1">Laundry Tracker</span>
 
-    <!-- Building Filter Buttons -->
-    <div class="mt-3 mb-2 d-flex gap-2">
-      <button type="button" class="btn btn-outline-secondary" id="filterChase">Chase Court</button>
-      <button type="button" class="btn btn-outline-secondary" id="filterTower">Crowell Tower</button>
-    </div>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <!-- Location dropdown -->
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              Locations
+            </a>
+            <ul class="dropdown-menu">
+              <li><button class="dropdown-item" id="filterChase">Chase Court</button></li>
+              <li><button class="dropdown-item" id="filterTower">Crowell Tower</button></li>
+            </ul>
+          </li>
+        </ul>
+
+        <!-- Right side: Create + Mode toggle -->
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-primary btn-sm admin" data-bs-toggle="modal" data-bs-target="#createMachineModal">
+            Create Machine
+          </button>
+          <button type="button" id="modeToggleBtn" class="btn btn-outline-light btn-sm">
+            Admin
+          </button>
+        </div>
+      </div>
+    </nav>
 
     <!-- Floor Filter Buttons (populated dynamically) -->
-    <div class="mb-2 d-flex gap-2 flex-wrap d-none" id="floorFilterRow"></div>
+    <div class="mx-3 mt-3 mb-2 d-flex gap-2 flex-wrap d-none" id="floorFilterRow"></div>
 
-    <div id="list"></div>
+    <!-- Map + Table side-by-side layout -->
+    <div style="display:flex; gap:16px; align-items:flex-start; margin:16px;">
+      <!-- Floor Map (center/left) -->
+      <div id="floorMap" style="display:none; position:relative; flex:1 1 0; min-width:0;">
+        <img id="floorMapImg" src="" style="width:100%; display:block;" />
+      </div>
 
-    <!-- Floor Map -->
-    <div id="floorMap" style="display:none; position:relative; display:none; margin-top:16px;">
-      <img id="floorMapImg" src="" style="width:100%; display:block;" />
+      <!-- Machine List (right) -->
+      <div id="list" style="flex:0 0 320px; min-width:220px; max-width:380px;"></div>
     </div>
   </body>
 
@@ -90,14 +118,13 @@
   </div>
   <!-- Success Toast -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3">
-  <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert">
-    <div class="d-flex">
-      <div class="toast-body" id="successToastBody">
-        Machine created successfully!
+    <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="successToastBody">
+          Machine created successfully!
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
   </div>
-</div>
-
 </html>

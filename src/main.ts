@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const createMachineButton = document.getElementById("saveMachineBtn");
     const showMachineButton = document.getElementById("showMachineBtn");
 
+    const modeToggleBtn = document.getElementById("modeToggleBtn");
+
     const filterButtons = document.querySelectorAll<HTMLButtonElement>("#filterAll, #filterChase, #filterTower");
     const buildingMap: Record<string, string | undefined> = {
         filterAll: undefined,
@@ -17,53 +19,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const floorMap = document.getElementById("floorMap") as HTMLDivElement;
     const floorMapImg = document.getElementById("floorMapImg") as HTMLImageElement;
 
-    // Section button positions (left%, top%) on the Chase simple floor plan
-    const chaseFloor3Sections: { label: string; left: string; top: string }[] = [
-        { label: "D", left: "46%", top: "26%" },
-        { label: "E", left: "61%", top: "39%" },
-        { label: "C", left: "35%", top: "67%" },
-        { label: "B", left: "50%", top: "74%" },
-        { label: "A", left: "66%", top: "63%" },
-    ];
-
-    async function showFloorMap(building: string, floor: number) {
+    async function showFloorMap(building: string) {
         floorMap.innerHTML = "";
-        if (building === "chase" && floor === 3) {
+        if (building === "chase") {
             floorMapImg.src = "/maps/chasesimplefloorplan.png";
             floorMap.appendChild(floorMapImg);
-
-            const all = await showAll();
-            const machines = all.filter(m => m.location.building === building && m.location.floor === floor);
-
-            // Group machines by section
-            const bySection = new Map<string, typeof machines>();
-            for (const machine of machines) {
-                const section = machine.location.section ?? "";
-                if (!bySection.has(section)) bySection.set(section, []);
-                bySection.get(section)!.push(machine);
-            }
-
-            for (const [section, sectionMachines] of bySection) {
-                const pos = chaseFloor3Sections.find(s => s.label === section);
-                if (!pos) continue;
-
-                const table = document.createElement("table");
-                table.style.cssText = `position:absolute; left:${pos.left}; top:${pos.top}; transform:translate(-50%,-50%); border-collapse:collapse; font-size:clamp(7px, 0.8vw, 13px);`;
-
-                for (const machine of sectionMachines) {
-                    const label = machine.type === "washer" ? "Washer" : "Dryer";
-                    const tr = document.createElement("tr");
-                    const td = document.createElement("td");
-                    td.textContent = `${label} - ${machine.location.floor}${section}`;
-                    td.className = machine.type === "washer" ? "btn btn-primary" : "btn btn-warning";
-                    td.style.cssText = `cursor:pointer; width:5vw; height:2.5vw; text-align:center; vertical-align:middle; padding:2px; white-space:normal; word-break:break-word;`;
-                    td.addEventListener("click", () => alert(`Machine ID: ${machine._id}`));
-                    tr.appendChild(td);
-                    table.appendChild(tr);
-                }
-                floorMap.appendChild(table);
-            }
-
             floorMap.style.display = "block";
         } else {
             floorMap.style.display = "none";
@@ -82,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             all.filter(m => m.location.building === building).map(m => m.location.floor)
         );
 
+        let firstBtn: HTMLButtonElement | null = null;
         for (let i = 1; i <= data.floors; i++) {
             if (!floorsWithMachines.has(i)) continue;
             const btn = document.createElement("button");
@@ -93,10 +54,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 floorFilterRow.querySelectorAll("button").forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
                 refreshMachines(activeBuilding, floor);
-                if (activeBuilding) showFloorMap(activeBuilding, floor);
+                if (activeBuilding) showFloorMap(activeBuilding);
             });
             floorFilterRow.appendChild(btn);
+            if (!firstBtn) firstBtn = btn;
         }
+        firstBtn?.click();
     }
 
     filterButtons.forEach((btn) => {
@@ -109,9 +72,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             } else {
                 floorFilterRow.innerHTML = "";
                 floorFilterRow.classList.add("d-none");
+                floorMap.style.display = "none";
+                refreshMachines(undefined);
             }
-            floorMap.style.display = "none";
-            refreshMachines(activeBuilding);
         });
     });
 
@@ -120,9 +83,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sectionSelect = document.getElementById("machineSection") as HTMLSelectElement | null;
 
     const sectionContainer = document.getElementById("sectionContainer") as HTMLDivElement | null;
-    
-    // Loads all machines and displays it
-    // loadMachines()
+
+    // Reset to main menu when a floor becomes empty after deletion
+    document.addEventListener("floor-empty", () => {
+        activeBuilding = undefined;
+        floorFilterRow.innerHTML = "";
+        floorFilterRow.classList.add("d-none");
+        floorMap.style.display = "none";
+        document.getElementById("machines")?.remove();
+    });
 
     // Button Handlers
     createMachineButton?.addEventListener("click", () => {
@@ -133,6 +102,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         showAll();
     });
     
+    modeToggleBtn?.addEventListener("click", () => {
+      const isUser = document.body.classList.toggle("user");
+      modeToggleBtn.textContent = isUser ? "Admin" : "User";
+    });
+
     // Building Selection Handler
     buildingSelect?.addEventListener("change", () => {
         if (!buildingSelect || !floorSelect || !sectionContainer || !sectionSelect) return;
