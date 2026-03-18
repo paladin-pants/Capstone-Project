@@ -74,6 +74,135 @@ app.delete("/api/machines/:id", async (req, res) => {
 });
 
 /**
+ * GET /api/machine-states
+ * Returns all machine states
+ */
+app.get("/api/machine-states", async (_req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const states = await db.collection("machineStates").find({}).toArray();
+    res.json(states);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch machine states" });
+  }
+});
+
+/**
+ * GET /api/machine-states/:machineId
+ * Returns the state for a machine
+ */
+app.get("/api/machine-states/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    const db = await connectToDatabase();
+    const state = await db.collection("machineStates").findOne({ machineId });
+    if (!state) return res.status(404).json({ error: "Machine state not found" });
+    res.json(state);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch machine state" });
+  }
+});
+
+/**
+ * PUT /api/machine-states/:machineId
+ * Creates or updates the state for a machine
+ * Body: { status: "idle" | "running" | "off" }
+ */
+app.put("/api/machine-states/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    const { status } = req.body;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    const validStatuses = ["idle", "running", "off"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "status must be idle, running, or off" });
+    }
+    const db = await connectToDatabase();
+    await db.collection("machineStates").updateOne(
+      { machineId },
+      { $set: { machineId, status } },
+      { upsert: true }
+    );
+    res.json({ machineId, status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update machine state" });
+  }
+  return;
+});
+
+/**
+ * GET /api/machine-power
+ * Returns all machine power records
+ */
+app.get("/api/machine-power", async (_req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const power = await db.collection("machinePower").find({}).toArray();
+    res.json(power);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch machine power records" });
+  }
+});
+
+/**
+ * GET /api/machine-power/:machineId
+ * Returns the power record for a machine
+ */
+app.get("/api/machine-power/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    const db = await connectToDatabase();
+    const power = await db.collection("machinePower").findOne({ machineId });
+    if (!power) return res.status(404).json({ error: "Machine power not found" });
+    res.json(power);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch machine power" });
+  }
+});
+
+/**
+ * PUT /api/machine-power/:machineId
+ * Creates or updates the wattage for a machine
+ * Body: { wattage: number }
+ */
+app.put("/api/machine-power/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    const { wattage } = req.body;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    if (typeof wattage !== "number" || wattage < 0) {
+      return res.status(400).json({ error: "wattage must be a non-negative number" });
+    }
+    const db = await connectToDatabase();
+    await db.collection("machinePower").updateOne(
+      { machineId },
+      { $set: { machineId, wattage } },
+      { upsert: true }
+    );
+    res.json({ machineId, wattage });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update machine power" });
+  }
+  return;
+});
+
+/**
  * POST /api/machines
  * Creates a machine record
  */

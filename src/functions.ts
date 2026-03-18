@@ -1,5 +1,5 @@
 import { showToast } from "./minorFunctions.js"
-import type { MachineItem } from "./types/machine.js";
+import type { MachineItem, MachineState, MachinePower } from "./types/machine.js";
 
 // Creates a washer or dryer machine and adds it to the database
 export async function createMachine(): Promise<void> {
@@ -97,11 +97,24 @@ export async function showAll(): Promise<MachineItem[]> {
   return docs;
 }
 
+const STATUS_DOT: Record<string, string> = {
+    idle:    '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#198754;margin-right:6px;" title="Available"></span>',
+    running: '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ffc107;margin-right:6px;" title="Running"></span>',
+    off:     '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#dc3545;margin-right:6px;" title="Off"></span>',
+    unknown: '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#adb5bd;margin-right:6px;" title="Unknown"></span>',
+};
+
 // Displays all machines, optionally filtered by building and/or floor
 export async function loadMachines(building?: string, floor?: number) {
   const list = document.getElementById("list")
     if (list) {
-        const all = await showAll();
+        const [all, allPower] = await Promise.all([
+            showAll(),
+            fetch("/api/machine-power").then(r => r.ok ? r.json() as Promise<MachinePower[]> : []),
+        ]);
+        const powerByMachineId = new Map<string, number>(
+            (allPower as MachinePower[]).map(p => [p.machineId, p.wattage])
+        );
         const machineList = all.filter(m =>
             (!building || m.location.building === building) &&
             (!floor || m.location.floor === floor)
@@ -122,9 +135,19 @@ export async function loadMachines(building?: string, floor?: number) {
                 html += `<tr><td colspan="2" class="table-secondary fw-bold">Section ${section}</td></tr>`
             }
             for (const machine of machines) {
+                const wattage = powerByMachineId.get(machine._id);
+                const derivedStatus: MachineState["status"] | "unknown" =
+                    wattage === undefined ? "unknown" :
+                    wattage === 0         ? "off" :
+                    wattage > 100         ? "running" :
+                    wattage > 10          ? "idle" : "unknown";
+                const dot = STATUS_DOT[derivedStatus];
                 html += `<tr id=${machine._id}>`
-                html +=     `<td>${machine.type}</td>`
-                html +=     `<td class="admin"><button class="delete-btn" id=${machine._id}>Delete</button></td>`
+                html +=     `<td>${dot}${machine.type}</td>`
+                html +=     '<td class="admin d-flex gap-1">'
+                html +=         `<button class="configure-btn btn btn-warning btn-sm" id=${machine._id}><i class="bi bi-wrench"></i></button>`
+                html +=         `<button class="delete-btn btn btn-danger btn-sm" id=${machine._id}><i class="bi bi-trash"></i></button>`
+                html +=     '</td>'
                 html += '</tr>'
             }
         }
@@ -132,15 +155,86 @@ export async function loadMachines(building?: string, floor?: number) {
         html += '</table>'
         list.innerHTML = html
 
-        const buttons = document.querySelectorAll(".delete-btn");
-
-        // Delete buttons added
-        buttons.forEach((button) => {
+        document.querySelectorAll(".delete-btn").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 deleteById(event)
             });
         });
+
+        document.querySelectorAll(".configure-btn").forEach((button) => {
+            button.addEventListener("click", (event) => {
+                const id = (event.currentTarget as HTMLButtonElement).id;
+                openConfigureModal(id, powerByMachineId.get(id), building, floor);
+            });
+        });
     }
+}
+
+// Opens the configure modal for a machine and saves the wattage on confirm
+function openConfigureModal(machineId: string, currentWattage: number | undefined, building?: string, floor?: number) {
+    const modalEl = document.getElementById("configureMachineModal");
+    const input = document.getElementById("machineWattageInput") as HTMLInputElement;
+    const saveBtn = document.getElementById("saveConfigureBtn");
+    if (!modalEl || !input || !saveBtn) return;
+
+    input.value = currentWattage !== undefined ? String(currentWattage) : "";
+
+    const modal = (window as any).bootstrap.Modal.getInstance(modalEl)
+        ?? new (window as any).bootstrap.Modal(modalEl);
+
+    // Remove any previous listener to avoid stacking
+    const newSaveBtn = saveBtn.cloneNode(true) as HTMLElement;
+    saveBtn.replaceWith(newSaveBtn);
+
+    newSaveBtn.addEventListener("click", async () => {
+        const wattage = Number(input.value);
+        if (isNaN(wattage) || wattage < 0) {
+            showToast("Please enter a valid wattage", "danger");
+            return;
+        }
+        await setMachinePower(machineId, wattage);
+        showToast(`Wattage set to ${wattage}W`, "success");
+        modal.hide();
+        refreshMachines(building, floor);
+    });
+
+    modal.show();
+}
+
+// Gets the state for a machine
+export async function getMachineState(machineId: string): Promise<MachineState | null> {
+  const res = await fetch(`/api/machine-states/${machineId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch machine state");
+  return res.json() as Promise<MachineState>;
+}
+
+// Sets the state for a machine
+export async function setMachineState(machineId: string, status: MachineState["status"]): Promise<void> {
+  const res = await fetch(`/api/machine-states/${machineId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error("Failed to update machine state");
+}
+
+// Gets the power record for a machine
+export async function getMachinePower(machineId: string): Promise<MachinePower | null> {
+  const res = await fetch(`/api/machine-power/${machineId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch machine power");
+  return res.json() as Promise<MachinePower>;
+}
+
+// Sets the wattage for a machine
+export async function setMachinePower(machineId: string, wattage: number): Promise<void> {
+  const res = await fetch(`/api/machine-power/${machineId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ wattage }),
+  });
+  if (!res.ok) throw new Error("Failed to update machine power");
 }
 
 export function refreshMachines(building?: string, floor?: number) {

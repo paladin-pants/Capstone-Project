@@ -8,3 +8,15 @@ export type MachineItem = {
   },
   status: string
 };
+
+export type MachineState = {
+  _id: string;
+  machineId: string;
+  status: "idle" | "running" | "off";
+};
+
+export type MachinePower = {
+  _id: string;
+  machineId: string;
+  wattage: number;
+};
