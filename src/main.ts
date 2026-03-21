@@ -1,4 +1,4 @@
-import { createMachine, loadMachines, refreshMachines, showAll } from "./functions.js";
+import { createMachine, loadMachines, refreshMachines, showAll, loadComments, loadActivityLogs } from "./functions.js";
 import buildingData from "./data/buildings.json";
 
 const uri = "mongodb://localhost:27017/";
@@ -21,8 +21,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function showFloorMap(building: string) {
         floorMap.innerHTML = "";
-        if (building === "chase") {
-            floorMapImg.src = "/maps/chasesimplefloorplan.png";
+        const data = buildingData[building as keyof typeof buildingData] as { mapImage?: string };
+        if (data?.mapImage) {
+            floorMapImg.src = data.mapImage;
             floorMap.appendChild(floorMapImg);
             floorMap.style.display = "block";
         } else {
@@ -62,8 +63,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         firstBtn?.click();
     }
 
+    const mainContent = document.getElementById("mainContent") as HTMLDivElement;
+    const commentsPanel = document.getElementById("commentsPanel") as HTMLDivElement;
+    const activityPanel = document.getElementById("activityPanel") as HTMLDivElement;
+    const commentsBtn = document.getElementById("filterComments") as HTMLButtonElement;
+    const activityBtn = document.getElementById("filterActivity") as HTMLButtonElement;
+
+    function showMainContent() {
+        mainContent.style.display = "";
+        commentsPanel.style.display = "none";
+        activityPanel.style.display = "none";
+        commentsBtn.classList.remove("active");
+        activityBtn.classList.remove("active");
+    }
+
+    commentsBtn?.addEventListener("click", () => {
+        mainContent.style.display = "none";
+        commentsPanel.style.display = "block";
+        activityPanel.style.display = "none";
+        filterButtons.forEach(b => b.classList.remove("active"));
+        commentsBtn.classList.add("active");
+        activityBtn.classList.remove("active");
+        loadComments();
+    });
+
+    activityBtn?.addEventListener("click", () => {
+        mainContent.style.display = "none";
+        commentsPanel.style.display = "none";
+        activityPanel.style.display = "block";
+        filterButtons.forEach(b => b.classList.remove("active"));
+        commentsBtn.classList.remove("active");
+        activityBtn.classList.add("active");
+        loadActivityLogs();
+    });
+
     filterButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
+            showMainContent();
             filterButtons.forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
             activeBuilding = buildingMap[btn.id];
@@ -83,6 +119,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const sectionSelect = document.getElementById("machineSection") as HTMLSelectElement | null;
 
     const sectionContainer = document.getElementById("sectionContainer") as HTMLDivElement | null;
+
+    // Fix Bootstrap aria-hidden warning by blurring focused elements before modal hides
+    document.querySelectorAll(".modal").forEach(modal => {
+        modal.addEventListener("hide.bs.modal", () => {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+        });
+    });
 
     // Reset to main menu when a floor becomes empty after deletion
     document.addEventListener("floor-empty", () => {

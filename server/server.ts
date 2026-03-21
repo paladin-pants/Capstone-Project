@@ -178,6 +178,14 @@ app.get("/api/machine-power/:machineId", async (req, res) => {
  * Creates or updates the wattage for a machine
  * Body: { wattage: number }
  */
+function deriveState(wattage: number | undefined): string {
+  if (wattage === undefined) return "unknown";
+  if (wattage === 0) return "off";
+  if (wattage > 100) return "running";
+  if (wattage > 10) return "idle";
+  return "unknown";
+}
+
 app.put("/api/machine-power/:machineId", async (req, res) => {
   try {
     const { machineId } = req.params;
@@ -189,11 +197,21 @@ app.put("/api/machine-power/:machineId", async (req, res) => {
       return res.status(400).json({ error: "wattage must be a non-negative number" });
     }
     const db = await connectToDatabase();
+
+    const existing = await db.collection("machinePower").findOne({ machineId });
+    const fromState = deriveState(existing?.wattage);
+    const toState = deriveState(wattage);
+
     await db.collection("machinePower").updateOne(
       { machineId },
       { $set: { machineId, wattage } },
       { upsert: true }
     );
+
+    if (fromState !== toState) {
+      await db.collection("activityLogs").insertOne({ machineId, fromState, toState, timestamp: new Date() });
+    }
+
     res.json({ machineId, wattage });
   } catch (err) {
     console.error(err);
@@ -234,6 +252,105 @@ app.post("/api/machines", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create machine" });
+  }
+});
+
+/**
+ * GET /api/activity-logs
+ * Returns all state transition logs, newest first
+ */
+app.get("/api/activity-logs", async (_req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const logs = await db.collection("activityLogs").find({}).sort({ timestamp: -1 }).toArray();
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch activity logs" });
+  }
+});
+
+/**
+ * GET /api/machine-notes
+ * Returns all notes across all machines, newest first (for activity log)
+ */
+app.get("/api/machine-notes", async (_req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const notes = await db.collection("machineNotes").find({}).sort({ createdAt: -1 }).toArray();
+    res.json(notes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch notes" });
+  }
+});
+
+/**
+ * GET /api/machine-notes/:machineId
+ * Returns active (non-dismissed) notes for a machine, newest first
+ */
+app.get("/api/machine-notes/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    const db = await connectToDatabase();
+    const notes = await db.collection("machineNotes").find({ machineId, dismissed: { $ne: true } }).sort({ createdAt: -1 }).toArray();
+    res.json(notes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch notes" });
+  }
+});
+
+/**
+ * PATCH /api/machine-notes/note/:noteId/dismiss
+ * Soft-deletes a note by marking it as dismissed
+ */
+app.patch("/api/machine-notes/note/:noteId/dismiss", async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    if (!ObjectId.isValid(noteId)) {
+      return res.status(400).json({ error: "Invalid note id" });
+    }
+    const db = await connectToDatabase();
+    const result = await db.collection("machineNotes").updateOne(
+      { _id: new ObjectId(noteId) },
+      { $set: { dismissed: true, dismissedAt: new Date() } }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+    res.json({ message: "Note dismissed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to dismiss note" });
+  }
+});
+
+/**
+ * POST /api/machine-notes/:machineId
+ * Creates a new note for a machine
+ * Body: { text: string }
+ */
+app.post("/api/machine-notes/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    const { text } = req.body;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ error: "text is required" });
+    }
+    const db = await connectToDatabase();
+    const note = { machineId, text: text.trim(), createdAt: new Date() };
+    const result = await db.collection("machineNotes").insertOne(note);
+    res.status(201).json({ _id: result.insertedId, ...note });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create note" });
   }
 });
 

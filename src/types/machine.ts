@@ -20,3 +20,20 @@ export type MachinePower = {
   machineId: string;
   wattage: number;
 };
+
+export type ActivityLog = {
+  _id: string;
+  machineId: string;
+  fromState: string;
+  toState: string;
+  timestamp: string;
+};
+
+export type MachineNote = {
+  _id: string;
+  machineId: string;
+  text: string;
+  createdAt: string;
+  dismissed?: boolean;
+  dismissedAt?: string;
+};

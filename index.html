@@ -46,6 +46,12 @@
               <li><button class="dropdown-item" id="filterTower">Crowell Tower</button></li>
             </ul>
           </li>
+          <li class="nav-item">
+            <button class="nav-link" id="filterComments">Comments</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="filterActivity">Activity</button>
+          </li>
         </ul>
 
         <!-- Right side: Create + Mode toggle -->
@@ -60,18 +66,33 @@
       </div>
     </nav>
 
-    <!-- Floor Filter Buttons (populated dynamically) -->
-    <div class="mx-3 mt-3 mb-2 d-flex gap-2 flex-wrap d-none" id="floorFilterRow"></div>
+    <!-- Comments Panel -->
+    <div id="commentsPanel" style="display:none; margin:16px;">
+      <h5>Comments</h5>
+      <div id="commentsList"></div>
+    </div>
 
-    <!-- Map + Table side-by-side layout -->
-    <div style="display:flex; gap:16px; align-items:flex-start; margin:16px;">
-      <!-- Floor Map (center/left) -->
-      <div id="floorMap" style="display:none; position:relative; flex:1 1 0; min-width:0;">
-        <img id="floorMapImg" src="" style="width:100%; display:block;" />
+    <!-- Activity Panel -->
+    <div id="activityPanel" style="display:none; margin:16px;">
+      <h5>Activity</h5>
+      <div id="activityLogList"></div>
+    </div>
+
+    <!-- Main Content (hidden when Activity tab is open) -->
+    <div id="mainContent">
+      <!-- Floor Filter Buttons (populated dynamically) -->
+      <div class="mx-3 mt-3 mb-2 d-flex gap-2 flex-wrap d-none" id="floorFilterRow"></div>
+
+      <!-- Map + Table side-by-side layout -->
+      <div style="display:flex; gap:16px; align-items:flex-start; margin:16px;">
+        <!-- Floor Map (center/left) -->
+        <div id="floorMap" style="display:none; position:relative; flex:1 1 0; min-width:0;">
+          <img id="floorMapImg" src="" style="width:100%; display:block;" />
+        </div>
+
+        <!-- Machine List (right) -->
+        <div id="list" style="flex:0 0 320px; min-width:220px; max-width:380px;"></div>
       </div>
-
-      <!-- Machine List (right) -->
-      <div id="list" style="flex:0 0 320px; min-width:220px; max-width:380px;"></div>
     </div>
   </body>
 
@@ -117,6 +138,7 @@
       </div>
     </div>
   </div>
+  
   <!-- Configure Machine Modal -->
   <div class="modal fade" id="configureMachineModal" tabindex="-1" aria-labelledby="configureMachineModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -131,6 +153,28 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" id="saveConfigureBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comment Modal -->
+  <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="commentModalLabel">Machine Notes</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="commentNotesList" class="mb-3" style="max-height:250px; overflow-y:auto;"></div>
+          <hr>
+          <label for="commentNoteInput" class="form-label">Add a note</label>
+          <textarea class="form-control" id="commentNoteInput" rows="3" placeholder="Enter your note..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveCommentBtn">Save Note</button>
         </div>
       </div>
     </div>
