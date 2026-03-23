@@ -52,6 +52,9 @@
           <li class="nav-item">
             <button class="nav-link" id="filterActivity">Activity</button>
           </li>
+          <li class="nav-item admin">
+            <button class="nav-link" id="filterPower">Power</button>
+          </li>
         </ul>
 
         <!-- Right side: Create + Mode toggle -->
@@ -139,20 +142,25 @@
     </div>
   </div>
   
-  <!-- Configure Machine Modal -->
-  <div class="modal fade" id="configureMachineModal" tabindex="-1" aria-labelledby="configureMachineModalLabel" aria-hidden="true">
+  <!-- Calibrate Machine Modal -->
+  <div class="modal fade" id="calibrateMachineModal" tabindex="-1" aria-labelledby="calibrateMachineModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="configureMachineModalLabel">Configure Machine</h1>
+          <h1 class="modal-title fs-5" id="calibrateMachineModalLabel">Calibrate Machine</h1>
         </div>
         <div class="modal-body">
-          <label for="machineWattageInput" class="form-label">Wattage (W)</label>
-          <input type="number" class="form-control" id="machineWattageInput" min="0" placeholder="Enter wattage" />
+          <p class="text-muted small mb-2">Machine state is determined by which threshold the current wattage is closest to.</p>
+          <label for="offWattageInput" class="form-label">Off (W)</label>
+          <input type="number" class="form-control mb-2" id="offWattageInput" min="0" placeholder="e.g. 5" />
+          <label for="idleWattageInput" class="form-label">Idle (W)</label>
+          <input type="number" class="form-control mb-2" id="idleWattageInput" min="0" placeholder="e.g. 10" />
+          <label for="runningWattageInput" class="form-label">Running (W)</label>
+          <input type="number" class="form-control" id="runningWattageInput" min="0" placeholder="e.g. 200" />
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="saveConfigureBtn">Save</button>
+          <button type="button" class="btn btn-primary" id="saveCalibrateBtn">Save</button>
         </div>
       </div>
     </div>

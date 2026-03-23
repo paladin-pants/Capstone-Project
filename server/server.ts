@@ -15,6 +15,18 @@ if (!uri) throw new Error("Missing env var: MONGODB_URI");
 
 const client = new MongoClient(uri);
 
+// SSE clients listening for power updates
+const powerEventClients = new Set<import("express").Response>();
+
+app.get("/api/power-events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+  powerEventClients.add(res);
+  req.on("close", () => powerEventClients.delete(res));
+});
+
 let db: Db;
 
 // Reuse one connection (lazy connect on first request)
@@ -178,13 +190,64 @@ app.get("/api/machine-power/:machineId", async (req, res) => {
  * Creates or updates the wattage for a machine
  * Body: { wattage: number }
  */
-function deriveState(wattage: number | undefined): string {
+interface StateConfig { off: number; idle: number; running: number; }
+const DEFAULT_CONFIG: StateConfig = { off: 5, idle: 10, running: 200 };
+
+function deriveState(wattage: number | undefined, config: StateConfig = DEFAULT_CONFIG): string {
   if (wattage === undefined) return "unknown";
-  if (wattage === 0) return "off";
-  if (wattage > 100) return "running";
-  if (wattage > 10) return "idle";
-  return "unknown";
+  const offIdleMid = (config.off + config.idle) / 2;
+  const idleRunningMid = (config.idle + config.running) / 2;
+  if (wattage <= offIdleMid) return "off";
+  if (wattage <= idleRunningMid) return "idle";
+  return "running";
 }
+
+/**
+ * GET /api/machine-state-config
+ * Returns state threshold configs for all machines
+ */
+app.get("/api/machine-state-config", async (_req, res) => {
+  try {
+    const db = await connectToDatabase();
+    const configs = await db.collection("machineStateConfig").find({}).toArray();
+    res.json(configs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch state configs" });
+  }
+});
+
+/**
+ * PUT /api/machine-state-config/:machineId
+ * Creates or updates the state thresholds for a machine
+ * Body: { off: number, idle: number, running: number }
+ */
+app.put("/api/machine-state-config/:machineId", async (req, res) => {
+  try {
+    const { machineId } = req.params;
+    const { off, idle, running } = req.body;
+    if (!ObjectId.isValid(machineId)) {
+      return res.status(400).json({ error: "Invalid machine id" });
+    }
+    if (typeof off !== "number" || typeof idle !== "number" || typeof running !== "number") {
+      return res.status(400).json({ error: "off, idle, and running must be numbers" });
+    }
+    if (off >= idle || idle >= running) {
+      return res.status(400).json({ error: "Wattages must satisfy: off < idle < running" });
+    }
+    const db = await connectToDatabase();
+    await db.collection("machineStateConfig").updateOne(
+      { machineId },
+      { $set: { machineId, off, idle, running } },
+      { upsert: true }
+    );
+    res.json({ machineId, off, idle, running });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update state config" });
+  }
+  return;
+});
 
 app.put("/api/machine-power/:machineId", async (req, res) => {
   try {
@@ -198,9 +261,13 @@ app.put("/api/machine-power/:machineId", async (req, res) => {
     }
     const db = await connectToDatabase();
 
-    const existing = await db.collection("machinePower").findOne({ machineId });
-    const fromState = deriveState(existing?.wattage);
-    const toState = deriveState(wattage);
+    const [existing, configDoc] = await Promise.all([
+      db.collection("machinePower").findOne({ machineId }),
+      db.collection("machineStateConfig").findOne({ machineId }),
+    ]);
+    const config: StateConfig = configDoc ? (configDoc as unknown as StateConfig) : DEFAULT_CONFIG;
+    const fromState = deriveState(existing?.wattage, config);
+    const toState = deriveState(wattage, config);
 
     await db.collection("machinePower").updateOne(
       { machineId },
@@ -211,6 +278,9 @@ app.put("/api/machine-power/:machineId", async (req, res) => {
     if (fromState !== toState) {
       await db.collection("activityLogs").insertOne({ machineId, fromState, toState, timestamp: new Date() });
     }
+
+    const event = `data: ${JSON.stringify({ machineId, wattage })}\n\n`;
+    for (const client of powerEventClients) client.write(event);
 
     res.json({ machineId, wattage });
   } catch (err) {

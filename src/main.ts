@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     let activeBuilding: string | undefined = undefined;
+    let activeFloor: number | undefined = undefined;
 
     async function renderFloorButtons(building: string) {
         const data = buildingData[building as keyof typeof buildingData];
@@ -54,6 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             btn.addEventListener("click", () => {
                 floorFilterRow.querySelectorAll("button").forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
+                activeFloor = floor;
                 refreshMachines(activeBuilding, floor);
                 if (activeBuilding) showFloorMap(activeBuilding);
             });
@@ -63,18 +65,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         firstBtn?.click();
     }
 
+    // Live power updates via SSE — refresh machine list when any wattage changes
+    const powerEvents = new EventSource("/api/power-events");
+    powerEvents.onmessage = () => {
+        if (activeBuilding) refreshMachines(activeBuilding, activeFloor);
+    };
+
     const mainContent = document.getElementById("mainContent") as HTMLDivElement;
     const commentsPanel = document.getElementById("commentsPanel") as HTMLDivElement;
     const activityPanel = document.getElementById("activityPanel") as HTMLDivElement;
     const commentsBtn = document.getElementById("filterComments") as HTMLButtonElement;
     const activityBtn = document.getElementById("filterActivity") as HTMLButtonElement;
+    const powerBtn = document.getElementById("filterPower") as HTMLButtonElement;
+
+    const allPanelBtns = [commentsBtn, activityBtn];
 
     function showMainContent() {
         mainContent.style.display = "";
         commentsPanel.style.display = "none";
         activityPanel.style.display = "none";
-        commentsBtn.classList.remove("active");
-        activityBtn.classList.remove("active");
+        allPanelBtns.forEach(b => b?.classList.remove("active"));
     }
 
     commentsBtn?.addEventListener("click", () => {
@@ -82,8 +92,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         commentsPanel.style.display = "block";
         activityPanel.style.display = "none";
         filterButtons.forEach(b => b.classList.remove("active"));
+        allPanelBtns.forEach(b => b?.classList.remove("active"));
         commentsBtn.classList.add("active");
-        activityBtn.classList.remove("active");
         loadComments();
     });
 
@@ -92,9 +102,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         commentsPanel.style.display = "none";
         activityPanel.style.display = "block";
         filterButtons.forEach(b => b.classList.remove("active"));
-        commentsBtn.classList.remove("active");
+        allPanelBtns.forEach(b => b?.classList.remove("active"));
         activityBtn.classList.add("active");
         loadActivityLogs();
+    });
+
+    powerBtn?.addEventListener("click", () => {
+        window.open("/power.html", "_blank");
     });
 
     filterButtons.forEach((btn) => {

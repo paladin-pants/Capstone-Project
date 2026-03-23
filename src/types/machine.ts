@@ -21,6 +21,14 @@ export type MachinePower = {
   wattage: number;
 };
 
+export type MachineStateConfig = {
+  _id: string;
+  machineId: string;
+  off: number;
+  idle: number;
+  running: number;
+};
+
 export type ActivityLog = {
   _id: string;
   machineId: string;
