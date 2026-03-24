@@ -1,5 +1,6 @@
 import { showToast } from "./minorFunctions.js"
 import type { MachineItem, MachineState, MachinePower, MachineNote, ActivityLog, MachineStateConfig } from "./types/machine.js";
+import buildingData from "./data/buildings.json";
 
 // Creates a washer or dryer machine and adds it to the database
 export async function createMachine(): Promise<void> {
@@ -43,7 +44,7 @@ export async function createMachine(): Promise<void> {
     const data = await response.json();
 
     showToast(`Created machine with ID: ${data._id}`, "success");
-    refreshMachines();
+    refreshMachines(building, floor);
     
     // Resetting the form
     form?.reset();
@@ -145,7 +146,7 @@ export async function loadMachines(building?: string, floor?: number) {
         let html = ''
         html += '<table style="width: 100%" class="table table-bordered table-hover" id="machines">'
         html +=     '<tbody>'
-        for (const [section, machines] of bySection) {
+        for (const [section, machines] of [...bySection.entries()].sort(([a], [b]) => a.localeCompare(b))) {
             if (section) {
                 html += `<tr><td colspan="2" class="table-secondary fw-bold">Section ${section}</td></tr>`
             }
@@ -190,6 +191,38 @@ export async function loadMachines(building?: string, floor?: number) {
                 openCommentModal(id, machine?.type ?? "Machine");
             });
         });
+
+        // Render section status dots on the floor map
+        const floorMapEl = document.getElementById("floorMap");
+        floorMapEl?.querySelectorAll(".section-dot").forEach(d => d.remove());
+        if (building && floorMapEl) {
+            const bData = buildingData[building as keyof typeof buildingData] as typeof buildingData["chase"] & { sectionCoords?: Record<string, { x: number; y: number }> };
+            const coords = bData?.sectionCoords;
+            if (coords) {
+                for (const [section, pos] of Object.entries(coords)) {
+                    const sectionMachines = machineList.filter(m => m.location.section === section);
+                    if (sectionMachines.length === 0) continue;
+
+                    const STATE_LABEL_MAP: Record<string, string> = { idle: "Available", running: "Running", off: "Off", unknown: "Unknown" };
+                    const statuses = sectionMachines.map(m => deriveStatus(powerByMachineId.get(m._id), configByMachineId.get(m._id)));
+                    let color = "#adb5bd";
+                    if (statuses.some(s => s === "running"))     color = "#ffc107";
+                    else if (statuses.some(s => s === "idle"))   color = "#198754";
+                    else if (statuses.every(s => s === "off"))   color = "#dc3545";
+
+                    const tooltipLines = sectionMachines.map((m, i) => {
+                        const label = STATE_LABEL_MAP[statuses[i] ?? "unknown"] ?? "Unknown";
+                        return `${m.type.charAt(0).toUpperCase() + m.type.slice(1)}: ${label}`;
+                    }).join("\n");
+
+                    const dot = document.createElement("span");
+                    dot.className = "section-dot";
+                    dot.title = `Section ${section}\n${tooltipLines}`;
+                    dot.style.cssText = `position:absolute;left:${pos.x}%;top:${pos.y}%;width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;transform:translate(-50%,-50%);z-index:10;pointer-events:none;`;
+                    floorMapEl.appendChild(dot);
+                }
+            }
+        }
     }
 }
 
