@@ -86,7 +86,6 @@ export async function deleteById(event: Event) {
       document.dispatchEvent(new CustomEvent("floor-empty"));
     }
   }
-  // location.reload();
 }
 
 // Shows all machines from database
@@ -98,6 +97,7 @@ export async function showAll(): Promise<MachineItem[]> {
   return docs;
 }
 
+// #region Queue System
 // Tracks which machines the current user has queued for
 export const queuedMachines = new Set<string>();
 
@@ -146,6 +146,7 @@ export function showQueueNotification(machineId: string, machineLabel: string) {
 
     toastEl.querySelector(".queue-toast-close")?.addEventListener("click", dismiss);
 }
+// #endregion
 
 const STATUS_DOT: Record<string, string> = {
     idle:    '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#198754;margin-right:6px;" title="Available"></span>',
@@ -164,8 +165,12 @@ function deriveStatus(wattage: number | undefined, config: { off: number; idle: 
     return "unknown";
 }
 
+// #region Location Map and List
+let loadGeneration = 0;
+
 // Displays all machines, optionally filtered by building and/or floor
 export async function loadMachines(building?: string, floor?: number) {
+  const gen = ++loadGeneration;
   const list = document.getElementById("list")
     if (list) {
         const [all, allPower, allConfigs] = await Promise.all([
@@ -218,6 +223,7 @@ export async function loadMachines(building?: string, floor?: number) {
         }
         html +=     '</tbody>'
         html += '</table>'
+        if (gen !== loadGeneration) return;
         list.innerHTML = html
 
         document.querySelectorAll(".delete-btn").forEach((button) => {
@@ -287,7 +293,8 @@ export async function loadMachines(building?: string, floor?: number) {
         }
     }
 }
-
+// #endregion
+// #region Calibrate Modal
 // Opens the calibrate modal for a machine and saves the state thresholds on confirm
 async function openCalibrateModal(machineId: string, building?: string, floor?: number) {
     const modalEl = document.getElementById("calibrateMachineModal");
@@ -295,6 +302,7 @@ async function openCalibrateModal(machineId: string, building?: string, floor?: 
     const idleInput = document.getElementById("idleWattageInput") as HTMLInputElement;
     const runningInput = document.getElementById("runningWattageInput") as HTMLInputElement;
     const saveBtn = document.getElementById("saveCalibrateBtn");
+
     if (!modalEl || !offInput || !idleInput || !runningInput || !saveBtn) return;
 
     const configRes = await fetch(`/api/machine-state-config`);
@@ -337,7 +345,8 @@ async function openCalibrateModal(machineId: string, building?: string, floor?: 
 
     modal.show();
 }
-
+// #endregion
+// #region Comment Modal
 // Opens the comment modal for a machine, loads existing notes and allows adding new ones
 async function openCommentModal(machineId: string, machineType: string) {
     const modalEl = document.getElementById("commentModal");
@@ -410,7 +419,9 @@ async function openCommentModal(machineId: string, machineType: string) {
 
     modal.show();
 }
+// #endregion
 
+// #region API Functions
 // Gets the state for a machine
 export async function getMachineState(machineId: string): Promise<MachineState | null> {
   const res = await fetch(`/api/machine-states/${machineId}`);
@@ -446,6 +457,7 @@ export async function setMachinePower(machineId: string, wattage: number): Promi
   });
   if (!res.ok) throw new Error("Failed to update machine power");
 }
+// #endregion
 
 export function refreshMachines(building?: string, floor?: number) {
   const list = document.getElementById("machines")
@@ -453,6 +465,7 @@ export function refreshMachines(building?: string, floor?: number) {
   loadMachines(building, floor)
 }
 
+// #region Comments and Activity Logs
 // Loads all notes across all machines into the comments panel
 export async function loadComments() {
   const activityList = document.getElementById("commentsList");
@@ -542,7 +555,9 @@ const STATE_BADGE_CLASS: Record<string, string> = {
 const STATE_LABEL: Record<string, string> = {
   idle: "Available", running: "Running", off: "Off", unknown: "Unknown",
 };
+// #endregion
 
+// #region Power Control Tab
 // Loads the power control tab — a slider per calibrated machine for admins
 export async function loadPowerTab() {
   const powerList = document.getElementById("powerList");
@@ -610,3 +625,4 @@ export async function loadPowerTab() {
     });
   });
 }
+// #endregion

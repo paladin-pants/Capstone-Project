@@ -1,17 +1,13 @@
-import { createMachine, loadMachines, refreshMachines, showAll, loadComments, loadActivityLogs, queuedMachines, showQueueNotification, activeQueueToasts } from "./functions.js";
+import { createMachine, refreshMachines, showAll, loadComments, loadActivityLogs, queuedMachines, showQueueNotification, activeQueueToasts } from "./functions.js";
 import buildingData from "./data/buildings.json";
-
-const uri = "mongodb://localhost:27017/";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const createMachineButton = document.getElementById("saveMachineBtn");
-    const showMachineButton = document.getElementById("showMachineBtn");
 
     const modeToggleBtn = document.getElementById("modeToggleBtn");
 
-    const filterButtons = document.querySelectorAll<HTMLButtonElement>("#filterAll, #filterChase, #filterTower");
+    const filterButtons = document.querySelectorAll<HTMLButtonElement>("#filterChase, #filterTower");
     const buildingMap: Record<string, string | undefined> = {
-        filterAll: undefined,
         filterChase: "chase",
         filterTower: "tower",
     };
@@ -168,10 +164,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Button Handlers
     createMachineButton?.addEventListener("click", () => {
         createMachine();
-    });
-    showMachineButton?.addEventListener("click", () => {
-        refreshMachines()
-        showAll();
     });
     
     modeToggleBtn?.addEventListener("click", () => {
