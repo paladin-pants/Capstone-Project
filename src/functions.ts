@@ -98,6 +98,55 @@ export async function showAll(): Promise<MachineItem[]> {
   return docs;
 }
 
+// Tracks which machines the current user has queued for
+export const queuedMachines = new Set<string>();
+
+// Active queue toasts — keyed by machineId so they can be dismissed externally
+export const activeQueueToasts = new Map<string, () => void>();
+
+// Shows a countdown toast when a queued machine becomes available
+export function showQueueNotification(machineId: string, machineLabel: string) {
+    const container = document.getElementById("queueToastContainer");
+    if (!container) return;
+
+    const toastEl = document.createElement("div");
+    toastEl.className = "toast show align-items-center text-bg-success border-0";
+    toastEl.setAttribute("role", "alert");
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <strong>Machine available!</strong> ${machineLabel} is ready.
+                Your spot expires in <span id="queue-countdown-${machineId}">5:00</span>.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto queue-toast-close"></button>
+        </div>`;
+    container.appendChild(toastEl);
+
+    const dismiss = () => {
+        clearInterval(interval);
+        toastEl.remove();
+        activeQueueToasts.delete(machineId);
+    };
+    activeQueueToasts.set(machineId, dismiss);
+
+    let seconds = 300;
+    const interval = setInterval(() => {
+        seconds--;
+        const el = document.getElementById(`queue-countdown-${machineId}`);
+        if (el) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            el.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+        }
+        if (seconds <= 0) {
+            dismiss();
+            showToast("Your queue spot for a machine has expired", "warning");
+        }
+    }, 1000);
+
+    toastEl.querySelector(".queue-toast-close")?.addEventListener("click", dismiss);
+}
+
 const STATUS_DOT: Record<string, string> = {
     idle:    '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#198754;margin-right:6px;" title="Available"></span>',
     running: '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ffc107;margin-right:6px;" title="Running"></span>',
@@ -109,11 +158,10 @@ const DEFAULT_STATE_CONFIG = { off: 5, idle: 10, running: 200 };
 
 function deriveStatus(wattage: number | undefined, config: { off: number; idle: number; running: number } = DEFAULT_STATE_CONFIG): "off" | "idle" | "running" | "unknown" {
     if (wattage === undefined) return "unknown";
-    const offIdleMid = (config.off + config.idle) / 2;
-    const idleRunningMid = (config.idle + config.running) / 2;
-    if (wattage <= offIdleMid) return "off";
-    if (wattage <= idleRunningMid) return "idle";
-    return "running";
+    if (wattage >= config.running) return "running";
+    if (wattage >= config.idle)    return "idle";
+    if (wattage >= config.off)     return "off";
+    return "unknown";
 }
 
 // Displays all machines, optionally filtered by building and/or floor
@@ -156,13 +204,14 @@ export async function loadMachines(building?: string, floor?: number) {
                 const derivedStatus = deriveStatus(wattage, config);
                 const dot = STATUS_DOT[derivedStatus];
                 html += `<tr id=${machine._id}>`
-                html +=     `<td>${dot}${machine.type}</td>`
-                html +=     '<td>'
+                html +=     `<td style="width:100%">${dot}${machine.type}</td>`
+                html +=     '<td class="d-flex gap-1" style="white-space:nowrap">'
                 html +=         `<button class="comment-btn btn btn-secondary btn-sm" id=${machine._id}><i class="bi bi-chat"></i></button>`
-                html +=     '</td>'
-                html +=     '<td class="admin d-flex gap-1">'
-                html +=         `<button class="calibrate-btn btn btn-warning btn-sm" id=${machine._id}><i class="bi bi-wrench"></i></button>`
-                html +=         `<button class="delete-btn btn btn-danger btn-sm" id=${machine._id}><i class="bi bi-trash"></i></button>`
+                const queued = queuedMachines.has(machine._id);
+                const queueDisabled = derivedStatus === "off" || derivedStatus === "unknown";
+                html +=         `<button class="queue-btn btn ${queued ? "btn-info" : "btn-outline-info"} btn-sm" id=${machine._id} title="${queued ? "Leave queue" : "Join queue"}"${queueDisabled ? " disabled" : ""}><i class="bi bi-bell${queued ? "-fill" : ""}"></i></button>`
+                html +=         `<button class="calibrate-btn admin btn btn-warning btn-sm" id=${machine._id}><i class="bi bi-wrench"></i></button>`
+                html +=         `<button class="delete-btn admin btn btn-danger btn-sm" id=${machine._id}><i class="bi bi-trash"></i></button>`
                 html +=     '</td>'
                 html += '</tr>'
             }
@@ -181,6 +230,19 @@ export async function loadMachines(building?: string, floor?: number) {
             button.addEventListener("click", (event) => {
                 const id = (event.currentTarget as HTMLButtonElement).id;
                 openCalibrateModal(id, building, floor);
+            });
+        });
+
+        document.querySelectorAll(".queue-btn").forEach((button) => {
+            button.addEventListener("click", (event) => {
+                const id = (event.currentTarget as HTMLButtonElement).id;
+                const isNowQueued = !queuedMachines.has(id);
+                if (isNowQueued) queuedMachines.add(id); else queuedMachines.delete(id);
+                const btn = event.currentTarget as HTMLButtonElement;
+                btn.className = `queue-btn btn ${isNowQueued ? "btn-info" : "btn-outline-info"} btn-sm`;
+                btn.title = isNowQueued ? "Leave queue" : "Join queue";
+                btn.innerHTML = `<i class="bi bi-bell${isNowQueued ? "-fill" : ""}"></i>`;
+                showToast(isNowQueued ? "You've joined the queue" : "You've left the queue", "success");
             });
         });
 

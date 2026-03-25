@@ -12,11 +12,10 @@ const STATE_LABEL: Record<string, string> = {
 };
 
 function deriveStatus(wattage: number, config: { off: number; idle: number; running: number }) {
-  const offIdleMid = (config.off + config.idle) / 2;
-  const idleRunningMid = (config.idle + config.running) / 2;
-  if (wattage <= offIdleMid) return "off";
-  if (wattage <= idleRunningMid) return "idle";
-  return "running";
+  if (wattage >= config.running) return "running";
+  if (wattage >= config.idle)    return "idle";
+  if (wattage >= config.off)     return "off";
+  return "unknown";
 }
 
 // Track which slider is currently being dragged so SSE doesn't reset it

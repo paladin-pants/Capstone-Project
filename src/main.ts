@@ -1,4 +1,4 @@
-import { createMachine, loadMachines, refreshMachines, showAll, loadComments, loadActivityLogs } from "./functions.js";
+import { createMachine, loadMachines, refreshMachines, showAll, loadComments, loadActivityLogs, queuedMachines, showQueueNotification, activeQueueToasts } from "./functions.js";
 import buildingData from "./data/buildings.json";
 
 const uri = "mongodb://localhost:27017/";
@@ -65,9 +65,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         firstBtn?.click();
     }
 
-    // Live power updates via SSE — refresh machine list when any wattage changes
+    // Live power updates via SSE — check queue and refresh machine list on wattage changes
     const powerEvents = new EventSource("/api/power-events");
-    powerEvents.onmessage = () => {
+    powerEvents.onmessage = async (e) => {
+        const { machineId, toState } = JSON.parse(e.data) as { machineId: string; wattage: number; toState: string };
+        if (toState === "idle" && queuedMachines.has(machineId)) {
+            queuedMachines.delete(machineId);
+            const machines = await showAll();
+            const machine = machines.find(m => m._id === machineId);
+            const label = machine
+                ? `${machine.type} – Floor ${machine.location.floor}${machine.location.section ? ` ${machine.location.section}` : ""}`
+                : "Machine";
+            showQueueNotification(machineId, label);
+        } else {
+            // Dismiss the countdown toast if the machine changes state again (e.g. goes running)
+            activeQueueToasts.get(machineId)?.();
+        }
         if (activeBuilding) refreshMachines(activeBuilding, activeFloor);
     };
 

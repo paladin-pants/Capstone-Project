@@ -86,14 +86,14 @@
       <!-- Floor Filter Buttons (populated dynamically) -->
       <div class="mx-3 mt-3 mb-2 d-flex gap-2 flex-wrap d-none" id="floorFilterRow"></div>
 
-      <!-- Map + Table side-by-side layout -->
+      <!-- Map + Table -->
       <div style="display:flex; gap:16px; align-items:flex-start; margin:16px;">
-        <!-- Floor Map (center/left) -->
+        <!-- Floor Map -->
         <div id="floorMap" style="display:none; position:relative; flex:1 1 0; min-width:0;">
           <img id="floorMapImg" src="" style="width:100%; display:block;" />
         </div>
 
-        <!-- Machine List (right) -->
+        <!-- Machine List -->
         <div id="list" style="flex:0 0 320px; min-width:220px; max-width:380px;"></div>
       </div>
     </div>
@@ -150,7 +150,7 @@
           <h1 class="modal-title fs-5" id="calibrateMachineModalLabel">Calibrate Machine</h1>
         </div>
         <div class="modal-body">
-          <p class="text-muted small mb-2">Machine state is determined by which threshold the current wattage is closest to.</p>
+          <p class="text-muted small mb-2">Set minimum wattages for each state. e.g. off = 5W, idle = 10W, running = 30W.</p>
           <label for="offWattageInput" class="form-label">Off (W)</label>
           <input type="number" class="form-control mb-2" id="offWattageInput" min="0" placeholder="e.g. 5" />
           <label for="idleWattageInput" class="form-label">Idle (W)</label>
@@ -187,6 +187,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Queue Notification Toasts -->
+  <div class="toast-container position-fixed bottom-0 start-0 p-3" id="queueToastContainer"></div>
 
   <!-- Success Toast -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3">

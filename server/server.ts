@@ -195,11 +195,10 @@ const DEFAULT_CONFIG: StateConfig = { off: 5, idle: 10, running: 200 };
 
 function deriveState(wattage: number | undefined, config: StateConfig = DEFAULT_CONFIG): string {
   if (wattage === undefined) return "unknown";
-  const offIdleMid = (config.off + config.idle) / 2;
-  const idleRunningMid = (config.idle + config.running) / 2;
-  if (wattage <= offIdleMid) return "off";
-  if (wattage <= idleRunningMid) return "idle";
-  return "running";
+  if (wattage >= config.running) return "running";
+  if (wattage >= config.idle)    return "idle";
+  if (wattage >= config.off)     return "off";
+  return "unknown";
 }
 
 /**
@@ -279,7 +278,7 @@ app.put("/api/machine-power/:machineId", async (req, res) => {
       await db.collection("activityLogs").insertOne({ machineId, fromState, toState, timestamp: new Date() });
     }
 
-    const event = `data: ${JSON.stringify({ machineId, wattage })}\n\n`;
+    const event = `data: ${JSON.stringify({ machineId, wattage, toState })}\n\n`;
     for (const client of powerEventClients) client.write(event);
 
     res.json({ machineId, wattage });
