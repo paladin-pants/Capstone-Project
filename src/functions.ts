@@ -23,7 +23,7 @@ export async function createMachine(): Promise<void> {
   const section = sectionSelect?.value;
 
   try {
-    const response = await fetch("http://localhost:3000/api/machines", {
+    const response = await fetch("/api/machines", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

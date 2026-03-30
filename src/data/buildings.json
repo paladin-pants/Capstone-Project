@@ -2,7 +2,7 @@
   "chase": {
     "floors": 5,
     "sections": ["A", "B", "C", "D", "E"],
-    "mapImage": "/src/maps/chasesimplefloorplan.png",
+    "mapImage": "/maps/chasesimplefloorplan.png",
     "sectionCoords": {
       "A": { "x": 46, "y": 27 },
       "B": { "x": 65.9, "y": 63 },

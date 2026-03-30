@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const allPanelBtns = [commentsBtn, activityBtn];
 
     function showMainContent() {
-        mainContent.style.display = "";
+        mainContent.style.display = "block";
         commentsPanel.style.display = "none";
         activityPanel.style.display = "none";
         allPanelBtns.forEach(b => b?.classList.remove("active"));
@@ -122,6 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     filterButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
+            document.getElementById("splash")!.classList.replace("d-flex", "d-none");
             showMainContent();
             filterButtons.forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
