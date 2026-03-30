@@ -6,12 +6,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:watch": "tsc -w",
     "serve": "live-server",
-    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "dev2": "concurrently \"npx tsc -w\" \"npx live-server\"",
+    "dev": "npx concurrently \"vite --open\" \"tsx watch server/server.ts\"",
     "dev:client": "vite",
     "dev:server": "tsx watch server/server.ts"
+
   },
   "keywords": [],
   "author": "",
