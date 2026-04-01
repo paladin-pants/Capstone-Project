@@ -9,19 +9,12 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script type="module" src="/src/main.ts"></script>
-    <title>Items</title>
+    <title>Laundry Monitor</title>
     <style>
       body { font-family: system-ui, Arial, sans-serif; margin: 0; }
-      header { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
       button { padding: 8px 12px; cursor: pointer; }
-      .muted { color: #666; }
-      .error { color: #b00020; white-space: pre-wrap; }
       ul { padding-left: 18px; }
       li { margin: 8px 0; }
-      .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin: 10px 0; }
-      .row { display: flex; gap: 10px; flex-wrap: wrap; }
-      .pill { font-size: 12px; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; }
-      pre { background: #f6f8fa; padding: 10px; border-radius: 10px; overflow: auto; }
       body.user .admin { display: none !important; }
       .splashscreen-location { height: calc(100vh - 56px); }
     </style>
@@ -156,13 +149,13 @@
           <h1 class="modal-title fs-5" id="calibrateMachineModalLabel">Calibrate Machine</h1>
         </div>
         <div class="modal-body">
-          <p class="text-muted small mb-2">Set minimum wattages for each state. e.g. off = 5W, idle = 10W, running = 30W.</p>
+          <p class="text-muted small mb-2">Set minimum wattages for each state. e.g. off = 2W, idle = 10W, running = 50W.</p>
           <label for="offWattageInput" class="form-label">Off (W)</label>
-          <input type="number" class="form-control mb-2" id="offWattageInput" min="0" placeholder="e.g. 5" />
+          <input type="number" class="form-control mb-2" id="offWattageInput" min="0" placeholder="e.g. 2" />
           <label for="idleWattageInput" class="form-label">Idle (W)</label>
           <input type="number" class="form-control mb-2" id="idleWattageInput" min="0" placeholder="e.g. 10" />
           <label for="runningWattageInput" class="form-label">Running (W)</label>
-          <input type="number" class="form-control" id="runningWattageInput" min="0" placeholder="e.g. 200" />
+          <input type="number" class="form-control" id="runningWattageInput" min="0" placeholder="e.g. 50" />
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
