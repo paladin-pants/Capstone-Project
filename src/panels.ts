@@ -1,4 +1,4 @@
-import { loadComments, loadActivityLogs } from "./functions.js";
+import { loadComments, loadActivityLogs } from "./logs.js";
 
 export function initPanels(filterButtons: NodeListOf<HTMLButtonElement>) {
     const mainContent = document.getElementById("mainContent") as HTMLDivElement;

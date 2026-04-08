@@ -1,6 +1,11 @@
 import buildingData from "./data/buildings.json";
-import { showAll, refreshMachines } from "./functions.js";
-import { appState } from "./state.js";
+import { showAll } from "./api.js";
+import { refreshMachines } from "./machineList.js";
+
+export const appState = {
+    activeBuilding: undefined as string | undefined,
+    activeFloor: undefined as number | undefined,
+};
 
 export async function showFloorMap(building: string) {
     const floorMap = document.getElementById("floorMap") as HTMLDivElement;
