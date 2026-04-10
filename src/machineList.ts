@@ -1,6 +1,6 @@
-import { showToast } from "./minorFunctions.js";
+import { showToast } from "./toast.js";
 import type { MachinePower, MachineStateConfig } from "./types/machine.js";
-import { showAll } from "./api.js";
+import { showAll, deleteById } from "./api.js";
 import { queuedMachines } from "./queue.js";
 import { openCalibrateModal, openCommentModal } from "./modal.js";
 import buildingData from "./data/buildings.json";
@@ -15,6 +15,7 @@ export function deriveStatus(wattage: number | undefined, config: { off: number;
     return "unknown";
 }
 
+// Status dot for machine list and floor map
 const STATUS_DOT: Record<string, string> = {
     idle:    '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#198754;margin-right:6px;" title="Available"></span>',
     running: '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ffc107;margin-right:6px;" title="Running"></span>',
@@ -199,22 +200,5 @@ export async function createMachine(): Promise<void> {
     } catch (err) {
         console.error(err);
         alert("Error creating machine");
-    }
-}
-
-export async function deleteById(event: Event) {
-    const target = event.currentTarget as HTMLButtonElement;
-    const id = target.id;
-    if (!id) return;
-
-    const result = await fetch(`/api/machines/${id}`, { method: "DELETE" });
-    if (result.status === 200) {
-        showToast(`Deleted machine with ID: ${id}`, "success");
-        document.getElementById(id)?.remove();
-
-        const remainingMachines = document.querySelectorAll("#machines tbody tr[id]");
-        if (remainingMachines.length === 0) {
-            document.dispatchEvent(new CustomEvent("floor-empty"));
-        }
     }
 }

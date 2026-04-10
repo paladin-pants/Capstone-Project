@@ -1,5 +1,6 @@
 import { loadComments, loadActivityLogs } from "./logs.js";
 
+// Initializes navbar tabs buttons
 export function initPanels(filterButtons: NodeListOf<HTMLButtonElement>) {
     const mainContent = document.getElementById("mainContent") as HTMLDivElement;
     const commentsPanel = document.getElementById("commentsPanel") as HTMLDivElement;

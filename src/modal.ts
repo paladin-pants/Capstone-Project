@@ -1,8 +1,9 @@
-import { showToast } from "./minorFunctions.js";
+import { showToast } from "./toast.js";
 import type { MachineStateConfig, MachineNote } from "./types/machine.js";
 import { DEFAULT_STATE_CONFIG, refreshMachines } from "./machineList.js";
 import buildingData from "./data/buildings.json";
 
+// Calibrate modal for setting power thresholds
 export async function openCalibrateModal(machineId: string, building?: string, floor?: number) {
     const modalEl = document.getElementById("calibrateMachineModal");
     const offInput = document.getElementById("offWattageInput") as HTMLInputElement;
@@ -53,6 +54,7 @@ export async function openCalibrateModal(machineId: string, building?: string, f
     modal.show();
 }
 
+// Comment modal for viewing and adding machine notes
 export async function openCommentModal(machineId: string, machineType: string) {
     const modalEl = document.getElementById("commentModal");
     const title = document.getElementById("commentModalLabel");
@@ -125,6 +127,7 @@ export async function openCommentModal(machineId: string, machineType: string) {
     modal.show();
 }
 
+// Initializes the create machine form with dynamic building/floor/section selects
 export function initMachineForm() {
     const buildingSelect = document.getElementById("machineBuilding") as HTMLSelectElement | null;
     const floorSelect = document.getElementById("machineFloor") as HTMLSelectElement | null;

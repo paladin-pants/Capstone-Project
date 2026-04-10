@@ -7,6 +7,7 @@ export const appState = {
     activeFloor: undefined as number | undefined,
 };
 
+// Shows the floor map image for the selected building if available
 export async function showFloorMap(building: string) {
     const floorMap = document.getElementById("floorMap") as HTMLDivElement;
     const floorMapImg = document.getElementById("floorMapImg") as HTMLImageElement;
@@ -21,6 +22,7 @@ export async function showFloorMap(building: string) {
     }
 }
 
+// Renders floor buttons based on the selected building and available machines, then selects the lowest floor
 export async function renderFloorButtons(building: string) {
     const floorFilterRow = document.getElementById("floorFilterRow") as HTMLDivElement;
     const data = buildingData[building as keyof typeof buildingData];

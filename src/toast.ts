@@ -1,3 +1,4 @@
+// Displays a toast message of a given type
 export function showToast( message: string, type: "success" | "danger" | "warning" = "success" ): void {
   const toastElement = document.getElementById("successToast");
   const toastBody = document.getElementById("successToastBody");

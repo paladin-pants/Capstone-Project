@@ -13,6 +13,7 @@ const STATE_LABEL: Record<string, string> = {
   idle: "Available", running: "Running", off: "Off", unknown: "Unknown",
 };
 
+// Loads calibrated machines and renders the power tab with interactive sliders
 async function loadPowerTab() {
   const powerList = document.getElementById("powerList");
   if (!powerList) return;
@@ -82,6 +83,7 @@ async function loadPowerTab() {
 
 const dragging = new Set<string>();
 
+// Listen for real-time power updates and make sliders functional
 document.addEventListener("DOMContentLoaded", async () => {
   await loadPowerTab();
 

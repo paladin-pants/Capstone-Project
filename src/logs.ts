@@ -7,6 +7,7 @@ export const STATE_BADGE: Record<string, string> = {
   unknown: '<span class="badge bg-secondary">Unknown</span>',
 };
 
+// Loads and renders machine notes in the comments tab
 export async function loadComments() {
   const activityList = document.getElementById("commentsList");
   if (!activityList) return;
@@ -44,6 +45,7 @@ export async function loadComments() {
   activityList.innerHTML = html;
 }
 
+// Loads and renders machine state transition logs in the activity tab
 export async function loadActivityLogs() {
   const logList = document.getElementById("activityLogList");
   if (!logList) return;

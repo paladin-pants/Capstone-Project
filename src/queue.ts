@@ -1,8 +1,9 @@
-import { showToast } from "./minorFunctions.js";
+import { showToast } from "./toast.js";
 
 export const queuedMachines = new Set<string>();
 export const activeQueueToasts = new Map<string, () => void>();
 
+// Shows notification for machine availability then stars a 300 second or 5 minute countdown
 export function showQueueNotification(machineId: string, machineLabel: string) {
     const container = document.getElementById("queueToastContainer");
     if (!container) return;
