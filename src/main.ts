@@ -3,8 +3,8 @@ import { showAll, } from "./api.js";
 import { queuedMachines, showQueueNotification, activeQueueToasts } from "./queue.js";
 import { appState } from "./floorMap.js";
 import { renderFloorButtons } from "./floorMap.js";
-import { initPanels } from "./panels.js";
-import { initMachineForm } from "./machineForm.js";
+import { initPanels } from "./tabs.js";
+import { initMachineForm } from "./modal.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const createMachineButton = document.getElementById("saveMachineBtn");
